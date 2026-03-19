@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Персональное предложение</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #fdf2f3 0%, #fff 50%, #fdf2f3 100%);
+      padding: 2rem;
+    }
+    
+    #confetti-container {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 100;
+      overflow: hidden;
+    }
+    
+    .container {
+      max-width: 400px;
+      margin: 0 auto;
+      position: relative;
+      z-index: 1;
+    }
+    
+    .header {
+      text-align: center;
+      margin-bottom: 1.5rem;
+    }
+    
+    .header-subtitle {
+      font-size: 11px;
+      color: #9ca3af;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+    
+    .header-title {
+      font-size: 22px;
+      font-weight: 600;
+      color: #722f37;
+      margin-top: 8px;
+    }
+    
+    .envelope-wrapper {
+      position: relative;
+      width: 320px;
+      height: 320px;
+      margin: 0 auto;
+      perspective: 1000px;
+      cursor: pointer;
+    }
+    
+    /* ===== ВНУТРЕННИЙ КОНТЕНТ ===== */
+    .inner-content {
+      position: absolute;
+      inset: 40px;
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 8px 32px rgba(114,47,55,0.12);
+      opacity: 0;
+      transform: scale(0.8);
+      transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 0.8s;
+      overflow: hidden;
+      z-index: 1;
+      border: 1px solid rgba(114,47,55,0.08);
+    }
+    
+    .inner-content.show {
+      opacity: 1;
+      transform: scale(1);
+    }
+    
+    .card-inner {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .card-header {
+      background: #722f37;
+      padding: 16px;
+      text-align: center;
+    }
+    
+    .card-header-subtitle {
+      font-size: 10px;
+      color: rgba(255,255,255,0.7);
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      margin-bottom: 4px;
+    }
+    
+    .card-header-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #fff;
+    }
+    
+    .card-body {
+      flex: 1;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      background: #fff;
+    }
+    
+    /* Метрики */
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+    
+    .metric {
+      background: #fdf2f3;
+      border-radius: 10px;
+      padding: 10px 8px;
+      text-align: center;
+      border: 1px solid rgba(114,47,55,0.08);
+    }
+    
+    .metric-value {
+      font-size: 18px;
+      font-weight: 700;
+      color: #722f37;
+    }
+    
+    .metric-label {
+      font-size: 9px;
+      color: #722f37;
+      opacity: 0.6;
+      margin-top: 2px;
+    }
+    
+    /* Блок оффера */
+    .offer-box {
+      flex: 1;
+      background: linear-gradient(135deg, #fdf2f3 0%, #fff5f5 100%);
+      border-radius: 12px;
+      padding: 14px;
+      border: 1px solid rgba(114,47,55,0.1);
+    }
+    
+    .offer-label {
+      font-size: 9px;
+      color: #722f37;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      margin-bottom: 8px;
+      font-weight: 600;
+    }
+    
+    .offer-text {
+      font-size: 13px;
+      color: #722f37;
+      line-height: 1.6;
+    }
+    
+    /* Кнопка */
+    .cta-button {
+      width: 100%;
+      padding: 12px;
+      background: #722f37;
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-decoration: none;
+      display: block;
+      text-align: center;
+    }
+    
+    .cta-button:hover {
+      background: #5a252c;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(114,47,55,0.3);
+    }
+    
+    /* ===== ЛЕПЕСТКИ КОНВЕРТА ===== */
+    .flap {
+      position: absolute;
+      width: 0;
+      height: 0;
+      transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    
+    .flap-top {
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      border-left: 160px solid transparent;
+      border-right: 160px solid transparent;
+      border-top: 160px solid #fff;
+      transform-origin: top center;
+      z-index: 5;
+      filter: drop-shadow(0 3px 6px rgba(114,47,55,0.12));
+    }
+    
+    .flap-top.open {
+      transform: translateX(-50%) rotateX(180deg);
+      z-index: 0;
+    }
+    
+    .flap-top-border {
+      position: absolute;
+      top: -160px;
+      left: -160px;
+      width: 0;
+      height: 0;
+      border-left: 160px solid transparent;
+      border-right: 160px solid transparent;
+      border-top: 10px solid #722f37;
+    }
+    
+    .flap-top-content {
+      position: absolute;
+      top: -95px;
+      left: -30px;
+      width: 60px;
+      text-align: center;
+    }
+    
+    .flap-top-icon {
+      font-size: 22px;
+      color: #722f37;
+    }
+    
+    .flap-top-label {
+      font-size: 9px;
+      color: #722f37;
+      margin-top: 6px;
+      font-weight: 600;
+      letter-spacing: 1px;
+    }
+    
+    .flap-bottom {
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      border-left: 160px solid transparent;
+      border-right: 160px solid transparent;
+      border-bottom: 160px solid #fff;
+      transform-origin: bottom center;
+      transition-delay: 0.12s;
+      z-index: 4;
+      filter: drop-shadow(0 -3px 6px rgba(114,47,55,0.12));
+    }
+    
+    .flap-bottom.open {
+      transform: translateX(-50%) rotateX(-180deg);
+      z-index: 0;
+    }
+    
+    .flap-bottom-border {
+      position: absolute;
+      bottom: -160px;
+      left: -160px;
+      width: 0;
+      height: 0;
+      border-left: 160px solid transparent;
+      border-right: 160px solid transparent;
+      border-bottom: 10px solid #722f37;
+    }
+    
+    .flap-left {
+      left: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      border-top: 160px solid transparent;
+      border-bottom: 160px solid transparent;
+      border-left: 160px solid #fff;
+      transform-origin: left center;
+      transition-delay: 0.24s;
+      z-index: 3;
+      filter: drop-shadow(3px 0 6px rgba(114,47,55,0.12));
+    }
+    
+    .flap-left.open {
+      transform: translateY(-50%) rotateY(-180deg);
+      z-index: 0;
+    }
+    
+    .flap-left-border {
+      position: absolute;
+      left: -160px;
+      top: -160px;
+      width: 0;
+      height: 0;
+      border-top: 160px solid transparent;
+      border-bottom: 160px solid transparent;
+      border-left: 10px solid #722f37;
+    }
+    
+    .flap-right {
+      right: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      border-top: 160px solid transparent;
+      border-bottom: 160px solid transparent;
+      border-right: 160px solid #fff;
+      transform-origin: right center;
+      transition-delay: 0.36s;
+      z-index: 2;
+      filter: drop-shadow(-3px 0 6px rgba(114,47,55,0.12));
+    }
+    
+    .flap-right.open {
+      transform: translateY(-50%) rotateY(180deg);
+      z-index: 0;
+    }
+    
+    .flap-right-border {
+      position: absolute;
+      right: -160px;
+      top: -160px;
+      width: 0;
+      height: 0;
+      border-top: 160px solid transparent;
+      border-bottom: 160px solid transparent;
+      border-right: 10px solid #722f37;
+    }
+    
+    /* ===== ПЕЧАТЬ ===== */
+    .seal {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 56px;
+      height: 56px;
+      background: #722f37;
+      border-radius: 50%;
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 16px rgba(114,47,55,0.35);
+      transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+      cursor: pointer;
+    }
+    
+    .seal:hover {
+      transform: translate(-50%, -50%) scale(1.12);
+      box-shadow: 0 6px 20px rgba(114,47,55,0.45);
+    }
+    
+    .seal.hidden {
+      transform: translate(-50%, -50%) scale(0) rotate(180deg);
+      opacity: 0;
+    }
+    
+    .seal-icon {
+      color: #fff;
+      font-size: 24px;
+    }
+    
+    /* ===== ПОДСКАЗКИ И КНОПКИ ===== */
+    .hint {
+      text-align: center;
+      margin-top: 1.5rem;
+      transition: all 0.4s ease;
+    }
+    
+    .hint-text {
+      font-size: 13px;
+      color: #9ca3af;
+    }
+    
+    .hint.hidden {
+      opacity: 0;
+      transform: translateY(-10px);
+      pointer-events: none;
+    }
+    
+    .send-btn {
+      display: none;
+      text-align: center;
+      margin-top: 1.5rem;
+    }
+    
+    .send-btn.show {
+      display: block;
+      animation: fadeInUp 0.5s ease;
+    }
+    
+    .send-button {
+      padding: 14px 28px;
+      background: transparent;
+      border: 2px solid #722f37;
+      color: #722f37;
+      border-radius: 12px;
+      font-size: 14px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      text-decoration: none;
+      display: inline-block;
+    }
+    
+    .send-button:hover {
+      background: #722f37;
+      color: #fff;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(114,47,55,0.3);
+    }
+    
+    /* ===== АНИМАЦИИ ===== */
+    @keyframes fadeInUp {
+      from { 
+        opacity: 0; 
+        transform: translateY(20px); 
+      }
+      to { 
+        opacity: 1; 
+        transform: translateY(0); 
+      }
+    }
+    
+    @keyframes confettiFall {
+      0% { 
+        transform: translateY(0) rotate(0deg) scale(1); 
+        opacity: 1; 
+      }
+      100% { 
+        transform: translateY(100vh) rotate(720deg) scale(0.5); 
+        opacity: 0; 
+      }
+    }
+    
+    @keyframes pulse {
+      0%, 100% { transform: translate(-50%, -50%) scale(1); }
+      50% { transform: translate(-50%, -50%) scale(1.05); }
+    }
+    
+    .seal {
+      animation: pulse 2s ease-in-out infinite;
+    }
+    
+    .seal:hover {
+      animation: none;
+    }
+  </style>
+</head>
+<body>
+
+<div id="confetti-container"></div>
+
+<div class="container">
+  
+  <!-- ===== ЗАГОЛОВОК ===== -->
+  <div class="header">
+    <span class="header-subtitle">Персональное предложение для</span>
+    <!-- ✏️ ИЗМЕНИ ИМЯ ЭКСПЕРТА ЗДЕСЬ ↓ -->
+    <div class="header-title">Имя Эксперта</div>
+  </div>
+  
+  <!-- ===== КОНВЕРТ ===== -->
+  <div class="envelope-wrapper" id="envelope-wrapper">
+    
+    <!-- Внутренний контент -->
+    <div class="inner-content" id="inner-content">
+      <div class="card-inner">
+        
+        <!-- Шапка карточки -->
+        <div class="card-header">
+          <div class="card-header-subtitle">Анализ профиля</div>
+          <!-- ✏️ ИЗМЕНИ ИМЯ ЭКСПЕРТА ЗДЕСЬ ↓ -->
+          <div class="card-header-title">Имя Эксперта</div>
+        </div>
+        
+        <!-- Тело карточки -->
+        <div class="card-body">
+          
+          <!-- ✏️ ИЗМЕНИ МЕТРИКИ ЗДЕСЬ ↓ -->
+          <div class="metrics">
+            <div class="metric">
+              <div class="metric-value">47K</div>
+              <div class="metric-label">охват</div>
+            </div>
+            <div class="metric">
+              <div class="metric-value">+340%</div>
+              <div class="metric-label">потенциал</div>
+            </div>
+            <div class="metric">
+              <div class="metric-value">180K₽</div>
+              <div class="metric-label">упущено</div>
+            </div>
+          </div>
+          
+          <!-- ✏️ ИЗМЕНИ ТЕКСТ ОФФЕРА ЗДЕСЬ ↓ -->
+          <div class="offer-box">
+            <div class="offer-label">Моё предложение</div>
+            <div class="offer-text">
+              Я проанализировал твою воронку и нашёл 3 точки, где ты теряешь до 40% потенциальных клиентов. Готов показать на созвоне за 15 минут — бесплатно и без обязательств.
+            </div>
+          </div>
+          
+          <!-- ✏️ ИЗМЕНИ ССЫЛКУ И ТЕКСТ КНОПКИ ЗДЕСЬ ↓ -->
+          <a href="https://t.me/your_username" class="cta-button">
+            Написать мне в Telegram →
+          </a>
+          
+        </div>
+        
+      </div>
+    </div>
+    
+    <!-- Лепестки конверта -->
+    <div class="flap flap-top" id="flap-top">
+      <div class="flap-top-border"></div>
+      <div class="flap-top-content">
+        <div class="flap-top-icon">✦</div>
+        <div class="flap-top-label">ОТКРОЙ</div>
+      </div>
+    </div>
+    
+    <div class="flap flap-bottom" id="flap-bottom">
+      <div class="flap-bottom-border"></div>
+    </div>
+    
+    <div class="flap flap-left" id="flap-left">
+      <div class="flap-left-border"></div>
+    </div>
+    
+    <div class="flap flap-right" id="flap-right">
+      <div class="flap-right-border"></div>
+    </div>
+    
+    <!-- Печать -->
+    <div class="seal" id="seal">
+      <span class="seal-icon">✦</span>
+    </div>
+    
+  </div>
+  
+  <!-- Подсказка -->
+  <div class="hint" id="hint">
+    <span class="hint-text">Нажми на печать, чтобы открыть</span>
+  </div>
+  
+  <!-- Кнопка после открытия -->
+  <div class="send-btn" id="send-btn">
+    <!-- ✏️ ИЗМЕНИ ССЫЛКУ ЗДЕСЬ ↓ -->
+    <a href="https://t.me/your_username" class="send-button">
+      Связаться со мной →
+    </a>
+  </div>
+  
+</div>
+
+<script>
+const flapTop = document.getElementById('flap-top');
+const flapBottom = document.getElementById('flap-bottom');
+const flapLeft = document.getElementById('flap-left');
+const flapRight = document.getElementById('flap-right');
+const innerContent = document.getElementById('inner-content');
+const hint = document.getElementById('hint');
+const sendBtn = document.getElementById('send-btn');
+const seal = document.getElementById('seal');
+const confettiContainer = document.getElementById('confetti-container');
+
+let isOpen = false;
+
+function createConfetti() {
+  const colors = ['#722f37', '#ffffff', '#a85751', '#d4a5a5', '#f5e6e8', '#8b4049'];
+  
+  for (let i = 0; i < 120; i++) {
+    const confetti = document.createElement('div');
+    const size = Math.random() * 12 + 6;
+    const shapes = ['circle', 'square', 'rectangle'];
+    const shape = shapes[Math.floor(Math.random() * shapes.length)];
+    
+    let borderRadius = '0';
+    let width = size;
+    let height = size;
+    
+    if (shape === 'circle') {
+      borderRadius = '50%';
+    } else if (shape === 'rectangle') {
+      height = size * 0.4;
+      borderRadius = '2px';
+    } else {
+      borderRadius = '2px';
+    }
+    
+    const startX = Math.random() * 100;
+    const delay = Math.random() * 0.8;
+    const duration = Math.random() * 2 + 2.5;
+    
+    confetti.style.cssText = `
+      position: absolute;
+      width: ${width}px;
+      height: ${height}px;
+      background: ${colors[Math.floor(Math.random() * colors.length)]};
+      border-radius: ${borderRadius};
+      left: ${startX}%;
+      top: -20px;
+      opacity: ${Math.random() * 0.4 + 0.6};
+      transform: rotate(${Math.random() * 360}deg);
+      animation: confettiFall ${duration}s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+      animation-delay: ${delay}s;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    `;
+    
+    confettiContainer.appendChild(confetti);
+  }
+  
+  setTimeout(() => {
+    confettiContainer.innerHTML = '';
+  }, 5000);
+}
+
+function openEnvelope() {
+  if (isOpen) return;
+  isOpen = true;
+  
+  // Скрываем печать
+  seal.classList.add('hidden');
+  
+  // Запускаем конфетти
+  setTimeout(createConfetti, 150);
+  
+  // Открываем лепестки
+  setTimeout(() => {
+    flapTop.classList.add('open');
+    flapBottom.classList.add('open');
+    flapLeft.classList.add('open');
+    flapRight.classList.add('open');
+  }, 100);
+  
+  // Показываем контент
+  setTimeout(() => {
+    innerContent.classList.add('show');
+  }, 400);
+  
+  // Скрываем подсказку, показываем кнопку
+  hint.classList.add('hidden');
+  setTimeout(() => {
+    sendBtn.classList.add('show');
+  }, 1200);
+}
+
+seal.addEventListener('click', (e) => {
+  e.stopPropagation();
+  openEnvelope();
+});
+
+document.getElementById('envelope-wrapper').addEventListener('click', openEnvelope);
+</script>
+
+</body>
+</html>
